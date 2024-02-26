@@ -1,9 +1,9 @@
-#include <array>
-#include <cstdint>
+#include <cstddef>
+#include <cstdio>
 #include <iostream>
-#include <vector>
 
 #include "vihex.h"
+#include "vhx_storage.h"
 
 void printHelp() {
   std::cout << "Usage:\n "
@@ -15,12 +15,15 @@ void printHelp() {
             << "stdout\n              ommiting offset labels\n"
             << "-h, --help    Displays this text\n\n"
             << "Note:\n Specifying the -e option is not necessary, "
-            << "the curses editor is the default\n"
-            << " The -p and -q options can be combined into -pq\n";
+            << "the curses editor is the default.\n"
+            << " The -p and -q options may be combined into -pq.\n";
 }
 
 int printCout(char *filename, coutFormat format) {
   std::FILE *hxFile;
+  vhx::buffer hxBuffer;
+  size_t lineBreak = 0;
+  size_t lineNum = 0;
 
   hxFile = std::fopen(filename, "r");
   if (hxFile == nullptr) {
@@ -29,60 +32,37 @@ int printCout(char *filename, coutFormat format) {
     return -1;
   }
 
-  std::vector<std::array<char, 16>> hxBuffer;
-  struct {
-    uint32_t rows;
-    uint8_t colsLastRow;
-  } hxBufferInfo;
+  while (!std::feof(hxFile))
+    hxBuffer.append(std::getc(hxFile));
+  // Erase the EOF character at the end of the buffer
+  hxBuffer.erase(hxBuffer.getSize() - 1);
 
-  char currentChar = 0;
-  uint32_t rowLabel = 0;
-
-  hxBufferInfo.rows = 0;
-  hxBufferInfo.colsLastRow = 0;
-  hxBuffer.resize(1);
-  // Loop reading the file
-  do {
-    currentChar = std::fgetc(hxFile);
-    // Handling getting offset bigger than 0xF
-    if (hxBufferInfo.colsLastRow > 15) {
-      hxBufferInfo.colsLastRow = 0;
-      hxBufferInfo.rows++;
-      hxBuffer.resize(hxBufferInfo.rows + 1);
-    }
-    hxBuffer[hxBufferInfo.rows][hxBufferInfo.colsLastRow] = currentChar;
-    hxBufferInfo.colsLastRow++;
-  } while (!std::feof(hxFile));
   std::fclose(hxFile);
 
   switch (format) {
     case NORMAL:
-      for (uint32_t y = 0; y < hxBufferInfo.rows - 1; y++) {
-        std::printf("%.7X ", rowLabel);
-        for (uint8_t x = 0; x < 16; x++)
-          std::printf("%.2X ", (unsigned char) hxBuffer[y][x]);
-        std::putc('\n', stdout);
-        rowLabel += 0x10;
+      std::printf("%.7zX ", lineNum);
+      for (auto i : hxBuffer) {
+        std::printf("%.2X ", (unsigned char) i->value);
+        lineBreak++;
+        if (!(lineBreak % 16)) {
+          std::putchar('\n');
+          lineNum += 16;
+          std::printf("%.7zX ", lineNum);
+        }
       }
-      std::printf("%.7X ", rowLabel);
-      for (uint8_t x = 0; x < hxBufferInfo.colsLastRow; x++)
-        std::printf("%.2X ", (unsigned char)
-                             hxBuffer[hxBufferInfo.rows - 1][x]);
-      std::putc('\n', stdout);
-      rowLabel += hxBufferInfo.colsLastRow;
-      std::printf("%.7X ", rowLabel);
+      std::printf("\n%.7zX", lineNum + lineBreak % 16);
       break;
     case QUIET:
-        for (uint32_t y = 0; y < hxBufferInfo.rows - 1; y++) {
-        for (uint8_t x = 0; x < 16; x++)
-          std::printf("%.2X ", (unsigned char) hxBuffer[y][x]);
-        std::putc('\n', stdout);
+      for (auto i : hxBuffer) {
+        std::printf("%.2X ", (unsigned char) i->value);
+        lineBreak++;
+        if (!(lineBreak % 16))
+          std::putchar('\n');
       }
-      for (uint8_t x = 0; x < hxBufferInfo.colsLastRow; x++)
-        std::printf("%.2X ", (unsigned char)
-                             hxBuffer[hxBufferInfo.rows - 1][x]);
       break;
   }
+  std::putchar('\n');
 
   return 0;
 }

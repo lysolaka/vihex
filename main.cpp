@@ -7,6 +7,7 @@ void cursesEditor(char *filename) {
 }
 
 int main(int argc, char *argv[]) {
+  int retVal;
   // Parsing arguments
   // Case 1: error
   if (argc < 2 || argc > 4) {
@@ -21,9 +22,9 @@ int main(int argc, char *argv[]) {
   // Case 2: passed filename and: a flag or double flag
   } else if (argc == 3) {
     if (!std::strcmp(argv[1], "-p") || !std::strcmp(argv[1], "--print"))
-      printCout(argv[2], NORMAL);
+      retVal = printCout(argv[2], NORMAL);
     else if (!std::strcmp(argv[1], "-pq"))
-      printCout(argv[2], QUIET);
+      retVal = printCout(argv[2], QUIET);
     else if (!std::strcmp(argv[1], "-e") || !std::strcmp(argv[1], "--editor"))
       cursesEditor(argv[2]);
     else
@@ -37,5 +38,5 @@ int main(int argc, char *argv[]) {
       printHelp();
   }
 
-  return 0;
+  return retVal;
 }

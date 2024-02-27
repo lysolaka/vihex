@@ -43,7 +43,7 @@ int printCout(char *filename, coutFormat format) {
     case NORMAL:
       std::printf("%.7zX ", lineNum);
       for (auto i : hxBuffer) {
-        std::printf("%.2X ", (unsigned char) i->value);
+        std::printf("%.2X ", (unsigned char) i.value);
         lineBreak++;
         if (!(lineBreak % 16)) {
           std::putchar('\n');
@@ -55,7 +55,7 @@ int printCout(char *filename, coutFormat format) {
       break;
     case QUIET:
       for (auto i : hxBuffer) {
-        std::printf("%.2X ", (unsigned char) i->value);
+        std::printf("%.2X ", (unsigned char) i.value);
         lineBreak++;
         if (!(lineBreak % 16))
           std::putchar('\n');

@@ -22,17 +22,17 @@ public:
 
   // Destructor
   ~buffer() {
-    for (auto i : *this)
-      delete i;
+    for (size_t i = 0; i < size; i++)
+      delete cellIndex[i];
   }
 
   // Access operator
   cell &operator[](size_t idx) { return *cellIndex[idx]; }
 
   struct _iterator {
-    using value_t = cell *;
-    using pointer = value_t *;
-    using reference = value_t &;
+    using value_t = cell;
+    using pointer = cell **;
+    using reference = cell &;
 
   private:
     pointer i_ptr;
@@ -40,19 +40,10 @@ public:
   public:
     _iterator(pointer p) : i_ptr(p) {}
 
-    reference operator*() const { return *i_ptr; }
-    pointer operator->() { return i_ptr; }
+    reference operator*() const { return **i_ptr; }
     _iterator &operator++() {
       i_ptr++;
       return *this;
-    }
-    _iterator operator++(int) {
-      _iterator t = *this;
-      ++(*this);
-      return t;
-    }
-    friend bool operator==(const _iterator &a, const _iterator &b) {
-      return a.i_ptr == b.i_ptr;
     }
     friend bool operator!=(const _iterator &a, const _iterator &b) {
       return a.i_ptr != b.i_ptr;

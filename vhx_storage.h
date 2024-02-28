@@ -4,8 +4,9 @@ namespace vhx {
 class cell {
 public:
   char value;
+  cell *self;
 
-  cell(char x) : value(x) {}
+  cell(char x) : value(x), self(this) {}
   /*
    * NCURSES STUFF
    */
@@ -58,7 +59,6 @@ public:
 
   /*
    * Adds an element with value newVal to the end of the buffer
-   * Invalidates the iterator
    */
   void append(const char &newVal) {
     cell *newCell = new cell(newVal);
@@ -83,7 +83,6 @@ public:
   /*
    * Inserts an element with value newVal at index idx,
    * The value at that index will be newVal
-   * Invalidates the iterator
    */
   void insert(const char &newVal, const size_t idx) {
     cell *newCell = new cell(newVal);
@@ -103,7 +102,7 @@ public:
       size++;             // and set a new one
       cellIndex = newIndex;
     } else {
-      // Here the index doesm't matter, the buffer doesn't exist yet
+      // Here the index doesn't matter, the buffer doesn't exist yet
       cellIndex = new cell *[size + 1]; // Simple initialization
       size++;
     }
@@ -111,7 +110,6 @@ public:
 
   /*
    * Erases an element at a specified index and pushes back the buffer
-   * Invalidates the iterator
    */
   void erase(size_t idx) {
     delete cellIndex[idx]; // Delete the element
@@ -125,6 +123,16 @@ public:
 
     size--; // Update properties
     cellIndex = newIndex;
+  }
+
+  /*
+   * Erases an element by pointer
+   */
+  void erase(const cell *cell) {
+    size_t i = 0;
+    while (cellIndex[i] != cell) // First find its index
+      i++;                       // and erase it by index
+    erase(i);
   }
 };
 } // namespace vhx

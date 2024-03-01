@@ -1,7 +1,7 @@
 // Enum for printCout
-enum coutFormat { NORMAL, QUIET };
+enum coutFormat { NORMAL, QUIET, NORMAL_FULL, QUIET_FULL };
 
 // Function prototypes
 void printHelp();
-void cursesEditor(char *filename);
+int cursesEditor(char *filename);
 int printCout(char *filename, coutFormat format);

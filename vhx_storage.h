@@ -1,4 +1,5 @@
 #include <cstddef>
+#include <cstdint>
 // Classes for storing data
 namespace vhx {
 class cell {
@@ -133,6 +134,25 @@ public:
     while (cellIndex[i] != cell) // First find its index
       i++;                       // and erase it by index
     erase(i);
+  }
+
+  /*
+   * Checks if a line is full of zeros
+   * Always returns false if the line is at the end
+   * A line is a 16 cell batch, always from an offset of 0 from the beggining
+   * Starting index of a line is 16 * line
+   */
+  bool isZeroLine(const size_t &line) {
+    if ((line * 16 + 15) >= size) // Return false for the last line
+      return false;               // to avoid segfault
+    uint8_t zeroCount = 0;
+    for (uint8_t i = 0; i < 16; i++) { // Counting the zeros
+      if (cellIndex[line * 16 + i]->value == 0)
+        zeroCount++;
+    }
+    if (zeroCount == 16) // Check and return
+      return true;
+    return false;
   }
 };
 } // namespace vhx

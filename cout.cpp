@@ -25,7 +25,6 @@ void printHelp() {
 
 int printCout(char *filename, coutFormat format) {
   std::FILE *hxFile;
-  vhx::buffer hxBuffer;
   // Used for all formats:
   size_t lineBreak = 0;
   // Used for non-quiet formats:
@@ -41,14 +40,25 @@ int printCout(char *filename, coutFormat format) {
               << "Use: vihex -h for help\n";
     return -1;
   }
-
-  while (!std::feof(hxFile))
-    hxBuffer.append(std::getc(hxFile));
-  // Erase the EOF character at the end of the buffer
-  hxBuffer.erase(hxBuffer.getSize() - 1);
+  // Reading the file:
+  // For optimization get the length of the file
+  while (!std::feof(hxFile)) {
+    std::fgetc(hxFile);
+    lineBreak++; // WARNING! Reused lineBreak variable
+  }
+  // Get back to the beggining
+  std::rewind(hxFile);
+  // Create the buffer
+  vhx::cout_buffer hxBuffer(lineBreak);
+  // Read in data
+  for (size_t i = 0; i < lineBreak; i++)
+    hxBuffer[i] = std::fgetc(hxFile);
 
   std::fclose(hxFile);
 
+  // Resetting reused variable
+  lineBreak = 0;
+  // Handling formats
   switch (format) {
   case NORMAL:
     // This solution doesn't print the first line number
@@ -84,7 +94,7 @@ int printCout(char *filename, coutFormat format) {
           std::printf("%.7zx ", lineNum * 16);
       }
       if (linePrint)
-        std::printf("%.2x ", (unsigned char)i.value);
+        std::printf("%.2x ", (unsigned char)i);
       lineBreak++;
     }
     // Print the last byte offset
@@ -115,7 +125,7 @@ int printCout(char *filename, coutFormat format) {
         }
       }
       if (linePrint)
-        std::printf("%.2x ", (unsigned char)i.value);
+        std::printf("%.2x ", (unsigned char)i);
       lineBreak++;
     }
     break;
@@ -132,7 +142,7 @@ int printCout(char *filename, coutFormat format) {
         lineNum++;
         std::printf("%.7zx ", lineNum * 16);
       }
-      std::printf("%.2x ", (unsigned char)i.value);
+      std::printf("%.2x ", (unsigned char)i);
       lineBreak++;
     }
     // Print the last byte offset
@@ -141,7 +151,7 @@ int printCout(char *filename, coutFormat format) {
   // Works the same as previous one, without printing the line number
   case QUIET_FULL:
     for (auto i : hxBuffer) {
-      std::printf("%.2x ", (unsigned char)i.value);
+      std::printf("%.2x ", (unsigned char)i);
       lineBreak++;
       if (!(lineBreak % 16))
         std::putchar('\n');
